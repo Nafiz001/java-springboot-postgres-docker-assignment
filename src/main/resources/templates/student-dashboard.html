@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .navbar h1 { font-size: 24px; }
+        .navbar .user-info { display: flex; align-items: center; gap: 15px; }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .welcome-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 { color: #333; margin-bottom: 20px; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; color: #555; }
+        tr:hover { background: #f8f9fa; }
+        .btn {
+            padding: 8px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-active { background: #d4edda; color: #155724; }
+        .badge-completed { background: #cce5ff; color: #004085; }
+        .badge-dropped { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Student Dashboard</h1>
+        <div class="user-info">
+            <span>Welcome, <strong th:text="${user.fullName}">Student</strong></span>
+            <form th:action="@{/logout}" method="post" style="display: inline;">
+                <button type="submit" class="btn-logout">Logout</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="welcome-card">
+            <h2>Welcome to Your Student Portal</h2>
+            <p>View your enrolled courses and browse available courses.</p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div th:if="${successMessage}" style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+            <strong>✓ Success!</strong> <span th:text="${successMessage}"></span>
+        </div>
+        <div th:if="${errorMessage}" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+            <strong>✗ Error!</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+        <div class="section">
+            <h2>My Enrollments</h2>
+            <table th:if="${enrollments != null and !enrollments.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Enrollment Date</th>
+                        <th>Status</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="enrollment : ${enrollments}">
+                        <td th:text="${enrollment.courseCode}">CS101</td>
+                        <td th:text="${enrollment.courseName}">Introduction to Programming</td>
+                        <td th:text="${#temporals.format(enrollment.enrollmentDate, 'yyyy-MM-dd')}">2024-01-15</td>
+                        <td>
+                            <span class="badge" th:classappend="${enrollment.status eq T(com.example.sepm_assignment.model.Enrollment.EnrollmentStatus).ACTIVE} ? 'badge-active' : (${enrollment.status eq T(com.example.sepm_assignment.model.Enrollment.EnrollmentStatus).COMPLETED} ? 'badge-completed' : 'badge-dropped')"
+                                  th:text="${enrollment.status}">ACTIVE</span>
+                        </td>
+                        <td th:text="${enrollment.grade != null ? enrollment.grade : 'N/A'}">N/A</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p th:if="${enrollments == null or enrollments.isEmpty()}">You are not enrolled in any courses yet.</p>
+        </div>
+
+        <div class="section">
+            <h2>Available Courses</h2>
+            <table th:if="${courses != null and !courses.isEmpty()}">
+                <thead>
+                    <tr>
+                        <th>Course Code</th>
+                        <th>Course Name</th>
+                        <th>Credits</th>
+                        <th>Teacher</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="course : ${courses}">
+                        <td th:text="${course.courseCode}">CS101</td>
+                        <td th:text="${course.courseName}">Introduction to Programming</td>
+                        <td th:text="${course.credits}">3</td>
+                        <td th:text="${course.teacherName != null ? course.teacherName : 'TBA'}">Dr. Smith</td>
+                        <td>
+                            <form th:action="@{/enrollments/enroll}" method="post" style="display: inline;">
+                                <input type="hidden" name="studentId" th:value="${user.id}">
+                                <input type="hidden" name="courseId" th:value="${course.id}">
+                                <button type="submit" class="btn btn-primary">Enroll</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <p th:if="${courses == null or courses.isEmpty()}">No courses available at the moment.</p>
+        </div>
+    </div>
+</body>
+</html>
