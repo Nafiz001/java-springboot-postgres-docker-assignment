@@ -1,265 +1,170 @@
-# Student and Course Management System
-
-A comprehensive Spring Boot application with PostgreSQL, implementing MVC architecture, REST APIs, and role-based authentication.
-
+﻿# Student & Teacher Management System
+A comprehensive web-based management system for educational institutions built with Spring Boot, PostgreSQL, Spring Security, and Docker.
 ## Features
-
-- **Role-Based Authentication & Authorization**
-  - Three user roles: STUDENT, TEACHER, ADMIN
-  - Spring Security with BCrypt password encryption
-  
-- **User Management**
-  - User registration and login
-  - Role-specific dashboards
-  
-- **Course Management**
-  - Teachers can create, update, and delete courses
-  - Students can view and enroll in courses
-  - Admins have full access
-  
-- **Enrollment System**
-  - Students can enroll in courses
-  - Teachers can view enrolled students and assign grades
-  - Track enrollment status (ACTIVE, COMPLETED, DROPPED)
-
-- **Database Relations**
-  - One-to-Many: Teacher → Courses
-  - One-to-Many: Student → Enrollments
-  - Many-to-One: Enrollments → Course
-
-## Technology Stack
-
-- **Backend**: Spring Boot 4.0.2, Java 17
-- **Database**: PostgreSQL 15
-- **Security**: Spring Security with BCrypt
-- **Frontend**: Thymeleaf, HTML5, CSS3
-- **Build Tool**: Maven
-- **Containerization**: Docker & Docker Compose
-
-## Project Structure
-
+- Role-Based Access Control (Admin, Teacher, Student)
+- Course Management with cascade deletion
+- Student Enrollment System
+- Grade Management
+- User Management (Admin)
+- Custom Error Pages
+- REST API with Postman Collection
+## Tech Stack
+- Java 17
+- Spring Boot 3.2.2
+- PostgreSQL 15
+- Spring Security
+- Docker & Docker Compose
+- Thymeleaf
+- Maven
+## Quick Start
+### Prerequisites
+- Docker Desktop installed
+- Docker Compose installed
+### Run Application
+```bash
+docker-compose up --build
 ```
-SEPM_Assignment/
-├── src/
-│   ├── main/
-│   │   ├── java/com/example/sepm_assignment/
-│   │   │   ├── config/         # Security & Configuration
-│   │   │   ├── controller/     # MVC Controllers
-│   │   │   │   └── api/        # REST API Controllers
-│   │   │   ├── dto/            # Data Transfer Objects
-│   │   │   ├── model/          # Entity Classes
-│   │   │   ├── repository/     # JPA Repositories
-│   │   │   └── service/        # Business Logic
-│   │   └── resources/
-│   │       ├── templates/      # Thymeleaf Templates
-│   │       └── application.properties
+Access at: http://localhost:8081
+## Default Credentials
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | admin | admin123 |
+| Teacher | teacher | teacher123 |
+| Student | student | student123 |
+## API Testing
+Import the Postman collection:
+```
+SEPM_Assignment_API.postman_collection.json
+```
+### Collection Features
+- All REST API endpoints
+- Authentication flows
+- User management
+- Course CRUD operations
+- Enrollment management
+- Pre-configured base URL
+## Project Structure
+```
+src/
+├── main/
+│   ├── java/com/example/sepm_assignment/
+│   │   ├── config/          # Security & initialization
+│   │   ├── controller/      # Web & REST controllers
+│   │   ├── dto/             # Data transfer objects
+│   │   ├── model/           # JPA entities
+│   │   ├── repository/      # Data access layer
+│   │   └── service/         # Business logic
+│   └── resources/
+│       ├── templates/       # Thymeleaf pages
+│       └── application.properties
+├── compose.yaml             # Docker Compose config
 ├── Dockerfile
-├── compose.yaml
 └── pom.xml
 ```
-
-## Getting Started
-
-### Prerequisites
-
-- Docker Desktop installed
-- Java 17 (for local development)
-- Maven 3.9+ (for local development)
-
-### Running with Docker
-
-1. **Build and start the application:**
-   ```powershell
-   docker-compose up --build
-   ```
-
-2. **Access the application:**
-   - Open browser: http://localhost:8081
-   - The application will automatically create default users
-
-3. **Stop the application:**
-   ```powershell
-   docker-compose down
-   ```
-
-4. **Stop and remove volumes (reset database):**
-   ```powershell
-   docker-compose down -v
-   ```
-
-### Running Locally (Without Docker)
-
-1. **Start PostgreSQL:**
-   ```powershell
-   docker-compose up postgres
-   ```
-
-2. **Run the Spring Boot application:**
-   ```powershell
-   ./mvnw spring-boot:run
-   ```
-   Or on Windows:
-   ```powershell
-   .\mvnw.cmd spring-boot:run
-   ```
-
-## Default Users
-
-The application creates three default users on first startup:
-
-| Username | Password    | Role    |
-|----------|-------------|---------|
-| admin    | admin123    | ADMIN   |
-| teacher  | teacher123  | TEACHER |
-| student  | student123  | STUDENT |
-
 ## API Endpoints
-
 ### Authentication
-- `POST /api/auth/register` - Register new user
-
-### Users (Admin only)
-- `GET /api/users` - Get all users
-- `GET /api/users/{id}` - Get user by ID
-- `GET /api/users/role/{role}` - Get users by role
-- `DELETE /api/users/{id}` - Delete user
-
+- POST /api/auth/register - Register user
+- POST /login - Login
+- POST /logout - Logout
+### Users
+- GET /api/users - Get all users
+- GET /api/users/{id} - Get user by ID
+- GET /api/users/role/{role} - Get users by role
 ### Courses
-- `GET /api/courses` - Get all courses
-- `GET /api/courses/{id}` - Get course by ID
-- `GET /api/courses/teacher/{teacherId}` - Get courses by teacher
-- `POST /api/courses` - Create course (Teacher/Admin)
-- `PUT /api/courses/{id}` - Update course (Teacher/Admin)
-- `DELETE /api/courses/{id}` - Delete course (Teacher/Admin)
-
+- GET /api/courses - Get all courses
+- POST /api/courses - Create course
+- PUT /api/courses/{id} - Update course
+- DELETE /api/courses/{id} - Delete course (cascade)
 ### Enrollments
-- `POST /api/enrollments` - Enroll student (Student/Admin)
-- `GET /api/enrollments/student/{studentId}` - Get student enrollments
-- `GET /api/enrollments/course/{courseId}` - Get course enrollments (Teacher/Admin)
-- `PUT /api/enrollments/{id}/grade` - Update grade (Teacher/Admin)
-- `PUT /api/enrollments/{id}/status` - Update status (Teacher/Admin)
-- `DELETE /api/enrollments/{id}` - Delete enrollment (Admin)
-
-## Web Pages
-
-- `/` - Home (redirects to login)
-- `/login` - Login page
-- `/register` - Registration page
-- `/dashboard` - Role-based dashboard
-- `/courses` - Course list
-- `/courses/create` - Create course (Teacher/Admin)
-- `/courses/{id}` - Course details
-- `/courses/{id}/edit` - Edit course (Teacher/Admin)
-
+- POST /api/enrollments - Enroll student
+- GET /api/enrollments/student/{id} - Get enrollments
+- PUT /api/enrollments/{id}/grade - Update grade
+- DELETE /api/enrollments/{id} - Delete enrollment
+### Dashboards (Web)
+- GET /admin/dashboard - Admin panel
+- GET /teacher/dashboard - Teacher panel
+- GET /student/dashboard - Student panel
 ## Database Schema
-
-### Users Table
-- id (PK)
-- username (unique)
-- password (encrypted)
-- email (unique)
-- full_name
-- role (STUDENT, TEACHER, ADMIN)
-- enabled
-
-### Courses Table
-- id (PK)
-- course_code (unique)
-- course_name
-- description
-- credits
-- teacher_id (FK → users)
-
-### Enrollments Table
-- id (PK)
-- student_id (FK → users)
-- course_id (FK → courses)
-- enrollment_date
-- status (ACTIVE, COMPLETED, DROPPED)
-- grade
-
-## Role-Based Access Control
-
-### Student Role
-- View all courses
+### Users
+- id, username, password, email, full_name, role, enabled
+### Courses
+- id, course_code, course_name, description, credits, teacher_id
+### Enrollments
+- id, student_id, course_id, enrollment_date, status, grade
+## Security Features
+- BCrypt password encryption
+- Session-based authentication
+- Role-based authorization (@PreAuthorize)
+- CSRF protection
+- Custom error handling
+- Method-level security
+## Key Features
+### Admin Dashboard
+- Create users (any role)
+- Enable/Disable accounts
+- Delete users
+- View all system data
+### Teacher Dashboard
+- Create/Edit courses
+- Delete courses (cascade)
+- View enrolled students
+- Grade students
+### Student Dashboard
+- View available courses
 - Enroll in courses
-- View own enrollments and grades
-- Cannot create/modify courses
-
-### Teacher Role
-- Create, edit, and delete own courses
-- View enrolled students in own courses
-- Assign grades to students
-- Update enrollment status
-
-### Admin Role
-- Full access to all features
-- Manage users
-- Manage all courses
-- View all enrollments
-- Delete users and enrollments
-
-## Development
-
-### Build the project
-```powershell
-./mvnw clean install
-```
-
-### Run tests
-```powershell
-./mvnw test
-```
-
-### Package as JAR
-```powershell
-./mvnw clean package
-```
-
+- View grades
+- Track enrollment status
+## Cascade Deletion
+When a course is deleted:
+- All enrollments are automatically deleted
+- Student and teacher accounts remain intact
+- Database integrity is maintained
 ## Docker Commands
-
-### Build image
-```powershell
-docker build -t sepm-assignment .
+### Start application
+```bash
+docker-compose up --build -d
 ```
-
-### Run with Docker Compose
-```powershell
-docker-compose up -d
-```
-
 ### View logs
-```powershell
+```bash
 docker-compose logs -f app
 ```
-
-### Access PostgreSQL CLI
-```powershell
-docker-compose exec postgres psql -U myuser -d mydatabase
+### Stop application
+```bash
+docker-compose down
 ```
-
-## Security Features
-
-- Password encryption using BCrypt
-- CSRF protection for web forms (disabled for REST APIs)
-- Role-based method security with @PreAuthorize
-- Session management
-- Secure logout
-
-## Future Enhancements
-
-- Add Liquibase for database migrations
-- Implement pagination for large datasets
-- Add email notifications
-- File upload for course materials
-- Student attendance tracking
-- Assignment submission system
-- Grade calculation and GPA tracking
-
+### Reset database
+```bash
+docker-compose down -v
+docker-compose up --build
+```
+## Troubleshooting
+### Port already in use
+Change port in application.properties or stop conflicting process
+### Cannot login
+Use default credentials or reset database with: docker-compose down -v
+### Database connection failed
+Ensure PostgreSQL container is running: docker-compose ps
+### View database
+```bash
+docker exec -it sepm-postgres psql -U myuser -d mydatabase
+\dt
+SELECT * FROM users;
+```
+## Testing with Postman
+1. Import SEPM_Assignment_API.postman_collection.json
+2. Login using /login endpoint to get session cookie
+3. Test endpoints with authenticated session
+4. Collection includes all REST API endpoints
+## Requirements Met
+- Authentication & Authorization (Spring Security)
+- PostgreSQL Database
+- MVC Architecture
+- REST API Principles
+- Multiple entity relationships (1:N)
+- Dockerized application
+- Role-based authorization
+- Frontend with authentication
+## Author
+SEPM Assignment Project - February 2026
 ## License
-
-This project is for educational purposes (SEPM Assignment).
-
-## Contact
-
-For questions or issues, please contact the development team.
+Educational purposes - SEPM Assignment
