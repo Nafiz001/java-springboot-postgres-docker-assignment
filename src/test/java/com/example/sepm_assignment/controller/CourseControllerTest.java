@@ -78,7 +78,8 @@ class CourseControllerTest {
     }
 
     @Test
-    @DisplayName("Should list all courses without authentication")
+    @DisplayName("Should list all courses with authentication")
+    @WithMockUser(roles = "STUDENT")
     void listCourses() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses"))
@@ -88,7 +89,8 @@ class CourseControllerTest {
     }
 
     @Test
-    @DisplayName("Should view course details")
+    @DisplayName("Should view course details with authentication")
+    @WithMockUser(roles = "STUDENT")
     void viewCourse() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses/" + testCourse.getId()))
@@ -151,7 +153,7 @@ class CourseControllerTest {
         // Act & Assert
         mockMvc.perform(post("/courses/create")
                         .with(csrf())
-                        .param("courseCode", "CS101") // Already exists
+                        .param("courseCode", testCourse.getCourseCode()) // Use existing course code
                         .param("courseName", "Another Course")
                         .param("description", "Description")
                         .param("credits", "3")
@@ -261,6 +263,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should handle non-existent course gracefully")
+    @WithMockUser(roles = "STUDENT")
     void viewCourse_NotFound() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses/999"))

@@ -1,6 +1,5 @@
 package com.example.sepm_assignment.controller;
 
-import com.example.sepm_assignment.dto.RegistrationRequest;
 import com.example.sepm_assignment.model.User;
 import com.example.sepm_assignment.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -29,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Transactional
 @DisplayName("AdminController Integration Tests")
 class AdminControllerTest {
 
@@ -180,23 +177,23 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should prevent admin from deleting themselves")
-    @WithMockUser(roles = "ADMIN")
     void deleteUser_CannotDeleteSelf() throws Exception {
-        // This test won't work without matching username, so we create a matching user
+        // Create a user with a specific username to match WithMockUser
         User adminToDelete = new User();
-        adminToDelete.setUsername("mockuser"); // Match the mock user
+        adminToDelete.setUsername("currentadmin");
         adminToDelete.setPassword(passwordEncoder.encode("pass"));
-        adminToDelete.setEmail("mock" + System.currentTimeMillis() + "@example.com");
-        adminToDelete.setFullName("Mock User");
+        adminToDelete.setEmail("currentadmin" + System.currentTimeMillis() + "@example.com");
+        adminToDelete.setFullName("Current Admin");
         adminToDelete.setRole(User.Role.ADMIN);
         adminToDelete.setEnabled(true);
         adminToDelete = userRepository.saveAndFlush(adminToDelete);
 
         Long adminId = adminToDelete.getId();
 
-        // Act & Assert
+        // Act & Assert - Use the same username in WithMockUser
         mockMvc.perform(post("/admin/users/" + adminId + "/delete")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user("currentadmin").roles("ADMIN")))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/admin/dashboard"))
                 .andExpect(flash().attributeExists("errorMessage"))
