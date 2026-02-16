@@ -49,31 +49,34 @@ class AdminControllerTest {
     void setUp() {
         // Clean database
         userRepository.deleteAll();
+        userRepository.flush();
+
+        long timestamp = System.currentTimeMillis();
 
         // Create admin user
         adminUser = new User();
-        adminUser.setUsername("admin");
+        adminUser.setUsername("admin-" + timestamp);
         adminUser.setPassword(passwordEncoder.encode("admin123"));
-        adminUser.setEmail("admin@example.com");
+        adminUser.setEmail("admin" + timestamp + "@example.com");
         adminUser.setFullName("Admin User");
         adminUser.setRole(User.Role.ADMIN);
         adminUser.setEnabled(true);
-        userRepository.save(adminUser);
+        adminUser = userRepository.saveAndFlush(adminUser);
 
         // Create test student
         testStudent = new User();
-        testStudent.setUsername("student1");
+        testStudent.setUsername("student1-" + timestamp);
         testStudent.setPassword(passwordEncoder.encode("password"));
-        testStudent.setEmail("student1@example.com");
+        testStudent.setEmail("student1-" + timestamp + "@example.com");
         testStudent.setFullName("Test Student");
         testStudent.setRole(User.Role.STUDENT);
         testStudent.setEnabled(true);
-        userRepository.save(testStudent);
+        testStudent = userRepository.saveAndFlush(testStudent);
     }
 
     @Test
     @DisplayName("Should access create user form as admin")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void showCreateUserForm() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/admin/users/create"))
@@ -84,7 +87,7 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should deny access to create user form for non-admin")
-    @WithMockUser(username = "student1", roles = "STUDENT")
+    @WithMockUser(roles = "STUDENT")
     void showCreateUserForm_AccessDenied() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/admin/users/create"))
@@ -93,11 +96,11 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should create user successfully as admin")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void createUser() throws Exception {
         // Arrange
-        String username = "newteacher";
-        String email = "newteacher@example.com";
+        String username = "newteacher-" + System.currentTimeMillis();
+        String email = "newteacher" + System.currentTimeMillis() + "@example.com";
 
         // Act & Assert
         mockMvc.perform(post("/admin/users/create")
@@ -119,14 +122,14 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should fail to create user with duplicate username")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void createUser_DuplicateUsername_Fails() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/admin/users/create")
                         .with(csrf())
-                        .param("username", "student1") // Already exists
+                        .param("username", testStudent.getUsername()) // Use existing username
                         .param("password", "password123")
-                        .param("email", "newemail@example.com")
+                        .param("email", "newemail" + System.currentTimeMillis() + "@example.com")
                         .param("fullName", "New User")
                         .param("role", "STUDENT"))
                 .andExpect(status().is3xxRedirection())
@@ -138,14 +141,14 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should fail to create user with duplicate email")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void createUser_DuplicateEmail_Fails() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/admin/users/create")
                         .with(csrf())
-                        .param("username", "newuser")
+                        .param("username", "newuser" + System.currentTimeMillis())
                         .param("password", "password123")
-                        .param("email", "student1@example.com") // Already exists
+                        .param("email", testStudent.getEmail()) // Use existing email
                         .param("fullName", "New User")
                         .param("role", "STUDENT"))
                 .andExpect(status().is3xxRedirection())
@@ -157,7 +160,7 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should delete user successfully as admin")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void deleteUser() throws Exception {
         // Arrange
         Long userId = testStudent.getId();
@@ -177,10 +180,19 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should prevent admin from deleting themselves")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void deleteUser_CannotDeleteSelf() throws Exception {
-        // Arrange
-        Long adminId = adminUser.getId();
+        // This test won't work without matching username, so we create a matching user
+        User adminToDelete = new User();
+        adminToDelete.setUsername("mockuser"); // Match the mock user
+        adminToDelete.setPassword(passwordEncoder.encode("pass"));
+        adminToDelete.setEmail("mock" + System.currentTimeMillis() + "@example.com");
+        adminToDelete.setFullName("Mock User");
+        adminToDelete.setRole(User.Role.ADMIN);
+        adminToDelete.setEnabled(true);
+        adminToDelete = userRepository.saveAndFlush(adminToDelete);
+
+        Long adminId = adminToDelete.getId();
 
         // Act & Assert
         mockMvc.perform(post("/admin/users/" + adminId + "/delete")
@@ -197,7 +209,7 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should toggle user status successfully")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void toggleUserStatus() throws Exception {
         // Arrange
         Long userId = testStudent.getId();
@@ -219,7 +231,7 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should require CSRF token for POST requests")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void createUser_RequiresCsrf() throws Exception {
         // Act & Assert - without CSRF token
         mockMvc.perform(post("/admin/users/create")
@@ -233,7 +245,7 @@ class AdminControllerTest {
 
     @Test
     @DisplayName("Should handle non-existent user deletion gracefully")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void deleteUser_NotFound() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/admin/users/999/delete")

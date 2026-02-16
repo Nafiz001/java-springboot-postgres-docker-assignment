@@ -54,25 +54,27 @@ class CourseControllerTest {
         // Clean database
         courseRepository.deleteAll();
         userRepository.deleteAll();
+        courseRepository.flush();
+        userRepository.flush();
 
         // Create test teacher
         testTeacher = new User();
-        testTeacher.setUsername("teacher");
+        testTeacher.setUsername("teacher-" + System.currentTimeMillis());
         testTeacher.setPassword(passwordEncoder.encode("password"));
-        testTeacher.setEmail("teacher@example.com");
+        testTeacher.setEmail("teacher" + System.currentTimeMillis() + "@example.com");
         testTeacher.setFullName("Test Teacher");
         testTeacher.setRole(User.Role.TEACHER);
         testTeacher.setEnabled(true);
-        userRepository.save(testTeacher);
+        testTeacher = userRepository.saveAndFlush(testTeacher);
 
         // Create test course
         testCourse = new Course();
-        testCourse.setCourseCode("CS101");
+        testCourse.setCourseCode("CS101-" + System.currentTimeMillis());
         testCourse.setCourseName("Introduction to Computer Science");
         testCourse.setDescription("Basic CS concepts");
         testCourse.setCredits(3);
         testCourse.setTeacher(testTeacher);
-        courseRepository.save(testCourse);
+        testCourse = courseRepository.saveAndFlush(testCourse);
     }
 
     @Test
@@ -98,7 +100,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should access create course form as teacher")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void showCreateForm_AsTeacher() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses/create"))
@@ -110,7 +112,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should deny access to create course form for students")
-    @WithMockUser(username = "student", roles = "STUDENT")
+    @WithMockUser(roles = "STUDENT")
     void showCreateForm_AsStudent_AccessDenied() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses/create"))
@@ -119,7 +121,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should create course successfully as teacher")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void createCourse() throws Exception {
         // Arrange
         String courseCode = "CS102";
@@ -144,7 +146,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should fail to create course with duplicate course code")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void createCourse_DuplicateCourseCode_Fails() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/courses/create")
@@ -163,7 +165,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should access edit course form as teacher")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void showEditForm() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/courses/" + testCourse.getId() + "/edit"))
@@ -175,7 +177,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should update course successfully as teacher")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void updateCourse() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/courses/" + testCourse.getId() + "/edit")
@@ -198,7 +200,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should delete course successfully as teacher")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void deleteCourse_AsTeacher() throws Exception {
         // Arrange
         Long courseId = testCourse.getId();
@@ -218,7 +220,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should delete course and redirect to admin dashboard as admin")
-    @WithMockUser(username = "admin", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void deleteCourse_AsAdmin() throws Exception {
         // Arrange
         Long courseId = testCourse.getId();
@@ -236,7 +238,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should deny course deletion for students")
-    @WithMockUser(username = "student", roles = "STUDENT")
+    @WithMockUser(roles = "STUDENT")
     void deleteCourse_AsStudent_AccessDenied() throws Exception {
         // Act & Assert
         mockMvc.perform(post("/courses/" + testCourse.getId() + "/delete")
@@ -246,7 +248,7 @@ class CourseControllerTest {
 
     @Test
     @DisplayName("Should require CSRF token for POST requests")
-    @WithMockUser(username = "teacher", roles = "TEACHER")
+    @WithMockUser(roles = "TEACHER")
     void createCourse_RequiresCsrf() throws Exception {
         // Act & Assert - without CSRF token
         mockMvc.perform(post("/courses/create")
