@@ -75,13 +75,6 @@ jobs:
           target/site/
         retention-days: 30
 
-    - name: Publish Test Results
-      if: always()
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      with:
-        files: target/surefire-reports/*.xml
-        check_name: Test Results
-
     - name: Test Summary
       if: always()
       run: |
