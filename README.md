@@ -155,6 +155,52 @@ SELECT * FROM users;
 2. Login using /login endpoint to get session cookie
 3. Test endpoints with authenticated session
 4. Collection includes all REST API endpoints
+
+## 🧪 Testing
+
+### Test Suite Overview
+- **98+ comprehensive tests** covering all layers
+- **Unit Tests**: Services (UserService, CourseService)
+- **Integration Tests**: Controllers (AdminController, CourseController)
+- **Repository Tests**: Data access layer
+- **Entity Tests**: Domain models
+
+### Running Tests
+
+```bash
+# Run all tests
+mvn clean test
+
+# Run specific test class
+mvn test -Dtest=UserServiceTest
+
+# Run with coverage
+mvn clean verify
+
+# Generate test report
+mvn surefire-report:report
+```
+
+### Test Configuration
+- Uses **H2 in-memory database** for testing
+- **@DataJpaTest** for repository tests
+- **@SpringBootTest** with **@AutoConfigureMockMvc** for integration tests
+- **Mockito** for unit tests
+
+### CI/CD Pipeline
+- **GitHub Actions** workflow automatically runs tests on push/PR
+- **Docker-based testing** with PostgreSQL service
+- **Branch protection** requires all tests to pass before merge
+- View workflow: `.github/workflows/test.yml`
+
+📖 **Detailed Testing Guide:** See [TESTING_GUIDE.md](TESTING_GUIDE.md)
+
+## 📚 Documentation
+
+- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Comprehensive testing and Git workflow guide
+- **[BRANCH_PROTECTION_GUIDE.md](BRANCH_PROTECTION_GUIDE.md)** - GitHub branch protection setup
+- **[SEPM_Assignment_API.postman_collection.json](SEPM_Assignment_API.postman_collection.json)** - API testing collection
+
 ## Requirements Met
 - Authentication & Authorization (Spring Security)
 - PostgreSQL Database
